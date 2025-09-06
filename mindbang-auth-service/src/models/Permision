@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const permissiomSchema = new mongoose.Schema({
+    permision: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 3,
+        unique: true
+    },
+    role: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Role',
+        required: true        
+    },
+    application: {
+        type: String,
+        required: false,
+        trim: true,
+        default: ''
+    },
+    module: {
+        type: String,
+        required: false,
+        trim: true,
+        default: ''
+    },
+    action: {
+        type: String,
+        required: false,
+        trim: true,
+        default: ''
+    }
+
+
+}, {
+    timestamps: true
+}
+
+);
+module.exports = mongoose.model('Permision', permissiomSchema);

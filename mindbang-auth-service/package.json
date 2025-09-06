@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "prod": "node src/index.js",
-    "dev": "nodemon src/index.js"    
+    "prod": "node src/index.js  --env-file=.env.prod",
+    "dev": "nodemon src/index.js  --env-file=.env.dev"    
   },
   "author": "",
   "license": "ISC",

@@ -1,0 +1,14 @@
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mindbang-mongo-user-db
+    ports:
+      - "${MONGO_USER_PORT}:27017"
+    volumes:
+      - mongodb_data:/data/mindbang-users/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_USER_PASSWORD}
+volumes:
+  mongodb_data:

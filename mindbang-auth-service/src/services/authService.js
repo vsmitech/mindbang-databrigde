@@ -1,13 +1,14 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // User model
+const Role = require('../models/Role'); // Role model
 
 const SALT_ROUNDS = 10; // Nivel de complejidad para bcrypt
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultsecret'; // Clave secreta para JWT
 const JWT_EXPIRES_IN = '1h'; // Tiempo de expiración del token
 
 //Registro de usuario
-exports.registerUser = async ({ username, email, password, clientId }) => {
+exports.registerUser = async ({ username, email, password, clientId,roles}) => {
 
     // Verificacion de existencia del usuario
     const existingUser = await User.find({ email });
@@ -18,7 +19,7 @@ exports.registerUser = async ({ username, email, password, clientId }) => {
     // Hashing de la contraseña
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     // Creación del nuevo usuario
-    const newUser = new User({ username, email, password: hashedPassword, clientId, role: 'user' });
+    const newUser = new User({ username, email, password: hashedPassword, clientId, roles: roles || ['user'] });
 
     try {
         const savedUser = await newUser.save();
@@ -30,31 +31,36 @@ exports.registerUser = async ({ username, email, password, clientId }) => {
 
 //Login de usuario
 exports.login = async (email, password) => {
-    // Verificación de existencia del usuario
-    const user = await User.findOne({ email });
+
+    // 1. Verificar la existencia del usuario y poblar sus roles
+    // La clave es el .populate('roles')
+    const user = await User.findOne({ email }).populate('roles');
     if (!user) {
         throw new Error('Usuario no encontrado');
     }
 
-    //Comparación de contraseñas
-    console.log('Comparing passwords:', password.trim(), " - " + user.password.trim());
-    const isPasswordValid = await bcrypt.compare(password.trim(), user.password.trim());
+    // 2. Comparar la contraseña correctamente (bcrypt se encarga del hasheo)
+    const isPasswordValid = await bcrypt.compare(password.trim(), user.password);
     if (!isPasswordValid) {
         throw new Error('Contraseña incorrecta');
     }
 
-    // Generación del token JWT
+    // 3. Crear un array con los nombres de los roles    
+    const roleNames = user.roles.map(role => role.role);
+
+    console.log('User roles for token:', roleNames);
+
+    // 4. Generar el token JWT con los nombres de los roles
     const token = jwt.sign(
         {
-            userId: user._id,
+            _id: user._id,
             email: user.email,
-            role: user.role
+            roles: roleNames // <--- ¡Ahora se incluyen los nombres de los roles!
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
     );
     return token;
-
 };
 
 exports.logout = async (token) => {
@@ -66,7 +72,7 @@ exports.logout = async (token) => {
 exports.refreshToken = async (refreshToken) => {
   // Aquí deberías validar el refreshToken y emitir uno nuevo
   const payload = jwt.verify(refreshToken, JWT_SECRET); // solo si usas el mismo secreto
-  const newToken = jwt.sign({ userId: payload.userId, email: payload.email }, JWT_SECRET, {
+  const newToken = jwt.sign({ _id: payload._id, email: payload.email,roles:payload.roles }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN
   });
   return newToken;
@@ -143,16 +149,26 @@ exports.validateToken = async (token) => {
 exports.getRoles = async (userId) => {
   const user = await User.findById(userId);
   if (!user) throw new Error('Usuario no encontrado');
-  return [user.role]; // puedes extender a múltiples roles si lo necesitas
+  return [user.roles]; // puedes extender a múltiples roles si lo necesitas
+};
+
+// Listar todos los roles (solo admin)
+exports.listRoles = async () => {  
+  const roles = await Role.find();
+  if(!roles) throw new Error('No roles found');
+  return roles;
 };
 
 // Administración de usuarios (solo admin)
 exports.listUsers = async () => {
-  return await User.find().select('-password');
+
+  let users = await User.find().populate('roles').select('-password');
+  return users;
 };
 
 exports.getUserById = async (id) => {
   const user = await User.findById(id).select('-password');
+  console.log('User found:', user);
   if (!user) throw new Error('Usuario no encontrado');
   return user;
 };

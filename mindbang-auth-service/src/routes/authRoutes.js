@@ -23,13 +23,15 @@ router.get('/verify-email', authController.verifyEmail);
 router.post('/resend-verification', authController.resendVerification);
 
 //Roles y permisos
-router.get('/roles', verifyToken, authController.getRoles);
+router.get('/roles', verifyToken, authController.listRoles);
+
+const adminRoles = ['admin', 'sys-admin'];
 
 // Administración de usuarios (solo para admins)
-router.get('/users', verifyToken, requireRole(['admin']), authController.getAllUsers);
-router.get('/users/:id', verifyToken, requireRole(['admin']), authController.getUserById);
-router.put('/users/:id', verifyToken, requireRole(['admin']), authController.updateUser);
-router.delete('/users/:id', verifyToken, requireRole(['admin']), authController.deleteUser);
+router.get('/users', verifyToken, requireRole(adminRoles), authController.getAllUsers);
+router.get('/users/:id', verifyToken, requireRole(adminRoles), authController.getUserById);
+router.put('/users/:id', verifyToken, requireRole(adminRoles), authController.updateUser);
+router.delete('/users/:id', verifyToken, requireRole(adminRoles), authController.deleteUser);
 
 
 module.exports = router;

@@ -1,16 +1,24 @@
 const JWT = require('jsonwebtoken');
+const User = require('../models/User');
 
-exports.verifyToken = (req, res, next) => {
+exports.verifyToken = async (req, res, next) => {
    
-    const token = req.headers.authorization?.split(' ')[1]; // Obtener el token del encabezado Authorization
-    if (!token) {
+    const token = req.headers.authorization?.split(' ')[1]; // Obtener el token del encabezado Authorization    
+    if (!token) {        
         return res.status(401).json({ message: 'No token provided' });
     }
     try {
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Agregar la información del usuario al objeto de la solicitud 
+        // Busca al usuario en la base de datos y popula sus roles para obtener los nombres
+        const user = await User.findById(decoded._id).populate('roles');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }       
+        // Adjunta el objeto de usuario completo (con los roles populados) a la solicitud
+        req.user = user; 
         next();
     } catch (error) {
+        console.error('Error verificando token:', error);
         return res.status(401).json({ message: 'Invalid token' });
     }
 };
@@ -18,18 +26,25 @@ exports.verifyToken = (req, res, next) => {
 
 // Middleware para verificar rol requerido
 exports.requireRole = (requiredRoles) => {
+
+console.log('Roles requeridos para esta ruta:', requiredRoles);
+
   return (req, res, next) => {
-    if (!req.user || !req.user.role) {
+
+    console.log('Roles del usuario desde el token:', req.user ? req.user : 'No user info');
+
+    if (!req.user || !req.user.roles) {
+      console.log('No user or roles information available in request');
+      console.log('No hay información de roles en el token');      
       return res.status(403).json({ message: 'No role information available' });
     }
 
-    const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role];
+    const userRoles = req.user.roles.map(role => role.role);
     const hasAccess = requiredRoles.some(role => userRoles.includes(role));
 
     if (!hasAccess) {
       return res.status(403).json({ message: 'Access denied: insufficient role' });
     }
-
     next();
   };
 };

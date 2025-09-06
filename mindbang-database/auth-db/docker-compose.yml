@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mindbang-mongo-auth-db
+    ports:
+      - "${MONGO_AUTH_PORT}:27017"
+    volumes:
+      - mongodb_data:/data/mindbang-auth/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_AUTH_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_AUTH_PASSWORD}
+volumes:
+  mongodb_data:

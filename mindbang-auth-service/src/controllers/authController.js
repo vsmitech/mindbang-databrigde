@@ -74,9 +74,11 @@ exports.resetPassword = async (req, res, next) => {
 // Cambiar contraseña (usuario autenticado)
 exports.changePassword = async (req, res, next) => {
   try {
+    //console.log('Request', req);
+    //console.log('Change password called with body:', req.body);
     const { currentPassword, newPassword } = req.body;
-    await authService.changePassword(req.user.id, currentPassword, newPassword);
-    res.status(200).json({ message: 'Password changed successfully' });
+    await authService.changePassword(req.user.userId, currentPassword, newPassword);
+    res.status(200).json({success:true, message: 'Password changed successfully' });
   } catch (error) {
     next(error);
   }
@@ -86,7 +88,7 @@ exports.changePassword = async (req, res, next) => {
 exports.verifyEmail = async (req, res, next) => {
   try {
     await authService.verifyEmail(req.body.token);
-    res.status(200).json({ message: 'Email verified successfully' });
+    res.status(200).json({message: 'Email verified successfully' });
   } catch (error) {
     next(error);
   }
@@ -106,6 +108,7 @@ exports.resendVerification = async (req, res, next) => {
 exports.validateToken = async (req, res, next) => {
   try {
     const isValid = await authService.validateToken(req.body.token);
+    console.log('Token valid:', isValid);
     res.status(200).json({ valid: isValid });
   } catch (error) {
     next(error);
@@ -115,7 +118,17 @@ exports.validateToken = async (req, res, next) => {
 // Obtener roles del usuario
 exports.getRoles = async (req, res, next) => {
   try {
-    const roles = await authService.getRoles(req.user.id);
+    const roles = await authService.getRoles(req.user.id);    
+    res.status(200).json({ roles });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Listar todos los roles (solo admin)
+exports.listRoles = async (req, res, next) => {
+  try {
+    const roles = await authService.listRoles();
     res.status(200).json({ roles });
   } catch (error) {
     next(error);
@@ -133,7 +146,17 @@ exports.listUsers = async (req, res, next) => {
 };
 
 // Obtener usuario por ID (solo admin)
-exports.getUser = async (req, res, next) => {
+exports.getUserById = async (req, res, next) => {
+  try {
+    const user = await authService.getUserById(req.params.id);
+    res.status(200).json(user);
+  } catch (error) {
+    console.log('Error in getUserById:', error);
+    next(error);
+  }
+};
+
+exports.getCurrentUser = async (req, res, next) => {
   try {
     const user = await authService.getUserById(req.params.id);
     res.status(200).json({ user });
@@ -142,11 +165,22 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await authService.listUsers();
+    res.status(200).json({ users });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Actualizar usuario (solo admin)
 exports.updateUser = async (req, res, next) => {
   try {
+    console.log('Try Update user called with data:', req.body);
     const updated = await authService.updateUser(req.params.id, req.body);
     res.status(200).json({ message: 'User updated', user: updated });
+    console.log('User updated:', updated);
   } catch (error) {
     next(error);
   }
