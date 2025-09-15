@@ -3,8 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const {verifyToken, requireRole} = require('../middleware/authMiddleware');
 
-//Ruta para registrar usuario
-router.post('/register', authController.register);
+
 //Ruta para login de usuario
 router.post('/login', authController.login);
 
@@ -32,6 +31,7 @@ router.get('/users', verifyToken, requireRole(adminRoles), authController.getAll
 router.get('/users/:id', verifyToken, requireRole(adminRoles), authController.getUserById);
 router.put('/users/:id', verifyToken, requireRole(adminRoles), authController.updateUser);
 router.delete('/users/:id', verifyToken, requireRole(adminRoles), authController.deleteUser);
+router.post('/users',verifyToken,requireRole(adminRoles), authController.register);
 
 
 module.exports = router;

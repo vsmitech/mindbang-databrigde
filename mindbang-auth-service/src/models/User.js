@@ -33,11 +33,22 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    clientId: {
+    organizationId: {
         type: Schema.Types.ObjectId, // Referencia a la organización
         ref: 'Organization',
         required: false
     },
+    applicationSlugs: [{
+        type: String,
+        required: false,
+        trim: true,
+        lowercase: true
+    }],
+    applications: [{
+        type: Schema.Types.ObjectId,    
+        ref: 'App',
+        required: false
+    }],
     lastLogin: Date,
     passwordChangedAt: Date
 }, {
@@ -71,6 +82,11 @@ userSchema.methods.hasRole = function (roleName) {
     // Usar el método 'some' para verificar si algún elemento cumple la condición
     // Asume que el rol ya fue populado
     return this.roles.some(r => r.role === roleName);
+};
+
+// Método para verificar si el usuario tiene acceso a una aplicación por su slug
+userSchema.methods.hasAccessToApp = function (slug) {
+    return this.applicationSlugs.includes(slug.toLowerCase());
 };
 
 module.exports = mongoose.model('User', userSchema);

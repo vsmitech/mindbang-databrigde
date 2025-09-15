@@ -2,7 +2,7 @@ const authService = require('../services/authService');
 // Registro de usuario
 exports.register = async (req, res, next) => {
   try {
-    const user = await authService.register(req.body);
+    const user = await authService.registerUser(req.body);
     res.status(201).json({ message: 'User registered successfully', user });
   } catch (error) {
     next(error);
@@ -11,8 +11,9 @@ exports.register = async (req, res, next) => {
 // Login de usuario
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const token = await authService.login(email, password);
+    const { email, password, appSlug } = req.body;    
+    console.log("Login request received for email:", email, "and appSlug:", appSlug);
+    const token = await authService.login(email, password,appSlug);
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
     next(error);

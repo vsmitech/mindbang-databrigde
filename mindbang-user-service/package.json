@@ -1,14 +1,14 @@
 {
   "name": "mindbang-user-service",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "jest",
-    "prod": "node -r dotenv/config src/app.js --env-file=.env.dev",
-    "dev": "nodemon -r dotenv/config src/app.js --env-file=.env.prod"
+    "prod": "node -r dotenv/config src/index.js --env-file=.env.dev",
+    "dev": "nodemon -r dotenv/config src/index.js --env-file=.env.prod"
   },
   "keywords": [],
   "author": "",

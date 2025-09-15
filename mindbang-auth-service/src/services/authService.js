@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // User model
 const Role = require('../models/Role'); // Role model
+const App = require('../models/App'); // App model
 
 const SALT_ROUNDS = 10; // Nivel de complejidad para bcrypt
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultsecret'; // Clave secreta para JWT
@@ -11,8 +12,10 @@ const JWT_EXPIRES_IN = '1h'; // Tiempo de expiración del token
 exports.registerUser = async ({ username, email, password, clientId,roles}) => {
 
     // Verificacion de existencia del usuario
-    const existingUser = await User.find({ email });
+    console.log("Registering user with email:", email);
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
+        console.log("User already exists :", existingUser);
         throw new Error('El correo ya está registrado');
     }
 
@@ -30,13 +33,21 @@ exports.registerUser = async ({ username, email, password, clientId,roles}) => {
 };
 
 //Login de usuario
-exports.login = async (email, password) => {
+exports.login = async (email, password, appSlug) => {
 
     // 1. Verificar la existencia del usuario y poblar sus roles
     // La clave es el .populate('roles')
     const user = await User.findOne({ email }).populate('roles');
     if (!user) {
         throw new Error('Usuario no encontrado');
+    }    
+    console.log("App slug provided:", appSlug);
+    console.log("Validating access to app slug:", appSlug); 
+    const app =  await App.findOne({slug:appSlug});
+    console.log("App found:", app);
+    if(!app) {
+        console.log("App not found for slug:", appSlug);
+        throw new Error("Aplicación no encontrada");        
     }
 
     // 2. Comparar la contraseña correctamente (bcrypt se encarga del hasheo)
@@ -47,9 +58,7 @@ exports.login = async (email, password) => {
 
     // 3. Crear un array con los nombres de los roles    
     const roleNames = user.roles.map(role => role.role);
-
-    console.log('User roles for token:', roleNames);
-
+    
     // 4. Generar el token JWT con los nombres de los roles
     const token = jwt.sign(
         {

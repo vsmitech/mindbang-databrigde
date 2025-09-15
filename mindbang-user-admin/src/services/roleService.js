@@ -13,8 +13,7 @@ export async function getRoleList() {
       console.log(res);
       throw new Error('Error al obtener usuarios');
     }     
-    let response = await res.json();
-    console.log('Roles fetched:', response);
+    let response = await res.json();    
     return response;
   } catch (err) {
     console.error('[getRoleList]', err);

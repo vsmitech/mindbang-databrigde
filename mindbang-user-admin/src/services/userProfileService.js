@@ -4,7 +4,7 @@ import { fetchWithAuth } from "./fetchWithAuth";
  * URL base del servicio de perfiles de usuario.
  * Se asume que esta URL está definida en tu archivo .env
  */
-const API_URL = `${import.meta.env.VITE_API_USER_URL}/profiles`;
+const API_URL = `${import.meta.env.VITE_API_USER_URL}/user`;
 
 /**
  * Obtiene el perfil de un usuario por su ID.
@@ -22,6 +22,12 @@ export async function getUserProfile(userId) {
     });
 
     if (!res.ok) {
+
+      // Manejo especial para 404
+      if(res.status === 404) {
+        return null; // Perfil no encontrado
+      }
+
       const error = await res.json();
       throw new Error(error.message || `Error al obtener el perfil del usuario con ID: ${userId}`);
     }
@@ -32,6 +38,31 @@ export async function getUserProfile(userId) {
     throw err;
   }
 }
+
+
+export async function syncUserProfile(profileData) {
+  try {
+    console.log('Syncing user profile with data:', profileData);
+    const res = await fetchWithAuth(`${API_URL}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify(profileData)
+    }); 
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Error al sincronizar el perfil del usuario');
+    } 
+    return await res.json();
+  } catch (err) {
+    console.error('[userProfileService.syncUserProfile]', err);
+    throw err;
+  }
+};
+
 
 /**
  * Actualiza el perfil de un usuario.
@@ -65,7 +96,8 @@ export async function updateUserProfile(userId, profileData) {
 
 export const userProfileService = {
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  syncUserProfile
 
 }
 

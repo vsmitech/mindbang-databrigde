@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import UserForm from "../../components/users/UserForm";
 import UserProfile from "../../components/users/UserProfile";
 import UserApplication from "../../components/users/UserAplication";
-import { FiUserPlus } from "react-icons/fi";
+import { FiUser,FiUserPlus } from "react-icons/fi";
 
 
 export default function UserList() {
@@ -74,6 +74,17 @@ export default function UserList() {
     //setSelectedUser(null);
   };
 
+  const handleProfileUldate = (updatedProfile) => {    
+    setUsers(prevUsers => prevUsers.map(u => {  
+      if (u._id === updatedProfile.userId) {
+        return { ...u, profile: updatedProfile };
+      }
+      return u;
+    }));
+    //setSelectedUser(null);
+  };
+
+
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
   const { user } = useAuth();
 
@@ -89,7 +100,7 @@ export default function UserList() {
     },
     {
       label: '👤 Datos personales',
-      content: <UserProfile userId={selectedUser} />
+      content: <UserProfile user={selectedUser} onSubmit={handleProfileUldate} />
     }/*,
     {
       label: '🧩 Acceso a apps',
@@ -99,8 +110,13 @@ export default function UserList() {
 
 
   return (
-    <div>
-      <h2 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">👥 Gestión de Usuarios</h2>
+    <div className="mt-12">
+
+      <div className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-2 items-center inline-flex w-full justify-center space-x-2">        
+        <h2 className="text-xl font-bold" >👤 Gestión de Usuarios</h2>
+      </div>
+     
+
       <UserFilters query={query} setQuery={setQuery} />
       <UserTable users={paginated} onEditClick={handleEditClick} selectedUser={selectedUser} onUpdate={handleUpdate} />
       <Pagination

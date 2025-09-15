@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
+const APP_SLUG = import.meta.env.VITE_APP_SLUG;
 let token = null;
 let refreshToken = null;
 
@@ -42,9 +43,9 @@ instance.interceptors.response.use(
 export async function login(email, password) {
   if (!API_AUTH_URL) {
     throw new Error('URL de servicio de autenticación no está definida. Verifica archivos de entorno (comunica al administrador).');
-  }
-
-  const response = await axios.post(`${API_AUTH_URL}/login`, { email, password }, { withCredentials: true });
+  } 
+  let appSlug = APP_SLUG;
+  const response = await axios.post(`${API_AUTH_URL}/login`, { email, password, appSlug }, { withCredentials: true });
   token = response.data.token; // Guardar el token en la variable
   return response.data;
 }  

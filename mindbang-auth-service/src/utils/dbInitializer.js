@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Role = require('../models/Role');
 const Permision = require('../models/Permision');
+const App = require('../models/App');
+const { generateApiKey } = require('./utilCrypto');
 
 /**
  * Función para inicializar la base de datos con roles y un usuario superadministrador por defecto.
@@ -13,6 +15,38 @@ const seedDatabase = async () => {
         const defaultRoles = ['sys-admin', 'admin', 'viewer', 'user'];
         const superAdminRoleName = 'sys-admin';
         const defaultSystemPermissions = ['read', 'write', 'delete'];
+        const appIds = []; // Aquí puedes agregar los IDs de las aplicaciones si es necesario
+
+        console.log('Verificando y creando aplicaciones por defecto...');
+        // Crear aplicación mindbang-admin si no existe
+        const adminApp = await App.findOneAndUpdate(
+            { slug: process.env.APP_ADMIN_SLUG },
+            { 
+                name: 'MindBang Admin', 
+                description: 'Aplicación de administración principal',
+                slug: process.env.APP_ADMIN_SLUG, 
+                apiKey: generateApiKey(process.env.APP_ADMIN_SLUG) 
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        console.log(`Aplicación mindbang-admin registrada con ID: ${adminApp._id}`);
+
+
+        // Crear aplicación mindbang-databrigde si no existe
+        const dataBrigdeApp = await App.findOneAndUpdate(
+            { slug: process.env.APP_DATABRIGDE_SLUG },
+            { 
+                name: 'MindBang DataBrigde', 
+                description: 'Aplicación de integración de datos',
+                slug: process.env.APP_DATABRIGDE_SLUG, 
+                apiKey: generateApiKey(process.env.APP_DATABRIGDE_SLUG) 
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        console.log(`Aplicación mindbang-databrigde registrada con ID: ${dataBrigdeApp._id}`);
+        appIds.push(adminApp._id, dataBrigdeApp._id);
+
+
 
         console.log('Verificando y creando permisos por defecto...');
         // 1. Crear los permisos si no existen
@@ -53,6 +87,10 @@ const seedDatabase = async () => {
                 );
             })
         );
+
+        
+        
+
         
         // Obtener los IDs de los roles que le corresponden al superadministrador
         const rolesForSuperAdmin = roleRecords
@@ -63,7 +101,8 @@ const seedDatabase = async () => {
         const superAdminPassword = process.env.SUPERADMIN_PASSWORD;
         const superAdminUsername = process.env.SUPERADMIN_USERNAME;
 
-        console.log('Superadmin password from env:', superAdminPassword ? superAdminPassword: 'Not Set');
+        console.log('Superadmin password from env:', superAdminPassword ? superAdminPassword: 'Not Set');        
+
 
         // 3. Crear el usuario superadministrador si no existe
         console.log('Verificando usuario superadministrador...');
@@ -75,7 +114,9 @@ const seedDatabase = async () => {
                 username: superAdminUsername || 'superadmin',
                 email: superAdminEmail,
                 password: superAdminPassword,
-                roles: rolesForSuperAdmin // Asigna los IDs de los roles
+                roles: rolesForSuperAdmin, // Asigna los IDs de los roles
+                applicationSlugs: ['mindbang-admin', 'mindbang-databrigde'], // Asigna los slugs de las aplicaciones
+                applications: appIds // Asigna los IDs de las aplicaciones
             });
 
             await newAdmin.save();

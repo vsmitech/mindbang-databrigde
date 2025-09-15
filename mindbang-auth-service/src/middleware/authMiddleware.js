@@ -26,13 +26,7 @@ exports.verifyToken = async (req, res, next) => {
 
 // Middleware para verificar rol requerido
 exports.requireRole = (requiredRoles) => {
-
-console.log('Roles requeridos para esta ruta:', requiredRoles);
-
   return (req, res, next) => {
-
-    console.log('Roles del usuario desde el token:', req.user ? req.user : 'No user info');
-
     if (!req.user || !req.user.roles) {
       console.log('No user or roles information available in request');
       console.log('No hay información de roles en el token');      
@@ -43,6 +37,7 @@ console.log('Roles requeridos para esta ruta:', requiredRoles);
     const hasAccess = requiredRoles.some(role => userRoles.includes(role));
 
     if (!hasAccess) {
+      console.log('Access denied. User roles:', userRoles, 'Required roles:', requiredRoles);
       return res.status(403).json({ message: 'Access denied: insufficient role' });
     }
     next();

@@ -16,7 +16,8 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      return alert('Completa todos los campos');
+      setErrorMsg('Por favor, completa todos los campos');
+      return false;      
     }
     try {
       await login(email, password);
@@ -39,13 +40,6 @@ export default function Login() {
         {/* Título */}
         <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 text-center">Login</h2>
 
-        {/* Error */}
-        {errorMsg && (
-          <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900 p-2 rounded">
-            {errorMsg}
-          </div>
-        )}
-
         {/* Campos */}
         <div className="space-y-4">
           <input
@@ -53,6 +47,7 @@ export default function Login() {
             placeholder="Email"
             className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => (e.key === 'Enter'&& email && password) ? handleLogin() : null}
           />
           <input
             type="password"
@@ -69,6 +64,13 @@ export default function Login() {
         >
           Ingresar
         </button>
+
+        {/* Error */}
+        {errorMsg && (
+          <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900 p-2 rounded">
+            {errorMsg}
+          </div>
+        )}
 
         {/* Link */}
         <div className="text-center">

@@ -12,12 +12,13 @@ router.get('/admin', authMiddleware.verifyToken, roleMiddleware(['admin']), (req
     res.send('Admin content');
 });
 
+const adminRoles = ['admin', 'sys-admin'];
 /* Rutas para la gestión de roles (solo para admins) */
-router.post('/create-role', authMiddleware.verifyToken, roleMiddleware(['admin']), adminController.createRole);
-router.put('/update-role', authMiddleware.verifyToken, roleMiddleware(['admin']), adminController.updateRole);
-router.delete('/delete-role', authMiddleware.verifyToken, roleMiddleware(['admin']), adminController.deleteRole);
-router.get('/roles', authMiddleware.verifyToken, roleMiddleware(['admin']), adminController.listRoles);
-router.get('/role/:id', authMiddleware.verifyToken, roleMiddleware(['admin']), adminController.getRoleById);
+router.post('/create-role', authMiddleware.verifyToken, roleMiddleware(adminRoles), adminController.createRole);
+router.put('/update-role', authMiddleware.verifyToken, roleMiddleware(adminRoles), adminController.updateRole);
+router.delete('/delete-role', authMiddleware.verifyToken, roleMiddleware(adminRoles), adminController.deleteRole);
+router.get('/roles', authMiddleware.verifyToken, roleMiddleware(adminRoles), adminController.listRoles);
+router.get('/role/:id', authMiddleware.verifyToken, roleMiddleware(adminRoles), adminController.getRoleById);
 
 
 

@@ -1,54 +1,41 @@
 // src/controllers/userController.js
 const UserProfile = require('../models/UserProfile');
+const userProfileService = require('../services/userProfileService');
 const Client = require('../models/Client');
 const Session = require('../models/Session'); // Registro de sesiones
 
-exports.syncUserProfile = async (req, res, next) => {
+exports.getUserProfile = async (req, res, next) => {
   try {
-    const { userId, fullName, email, clientCode, roles } = req.body;
-
-    // Buscar cliente por código
-    const client = await Client.findOne({ code: clientCode });
-    if (!client) {
-      return res.status(404).json({ success: false, message: 'Cliente no encontrado' });
-    }
-
-    // Buscar perfil existente
-    let profile = await UserProfile.findOne({ userId });
-
+    const userId = req.params.id;
+    const profile = await userProfileService.findOne(userId);
     if (!profile) {
-      // Crear nuevo perfil
-      profile = new UserProfile({
-        userId,
-        fullName,
-        email,
-        clientId: client._id,
-        roles: roles || ['viewer'],
-        lastLogin: new Date()
-      });
-      await profile.save();
-    } else {
-      // Actualizar login
-      profile.lastLogin = new Date();
-      await profile.save();
+      console.log(`Perfil no encontrado para userId: ${userId}`);
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
     }
+    res.status(200).json({ success: true, profile });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.updateUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const updateData = req.body;
 
-    // Registrar sesión activa
-    const session = new Session({
-      userId: profile._id,
-      clientId: client._id,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
-      app: req.headers['x-app-name'] || 'web' // Permite trazabilidad por origen
-    });
-    await session.save();
+    const profile = userProfileService.update(userId,updateData);
+    if (!profile) { 
+      return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+    }
+    res.status(200).json({ success: true, message: 'Perfil actualizado', profile });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    return res.status(profile.isNew ? 201 : 200).json({
-      success: true,
-      message: profile.isNew ? 'Perfil creado' : 'Perfil sincronizado',
-      profile,
-      sessionId: session._id
-    });
+exports.syncUserProfile = async (req, res, next) => {
+  try {    
+    const { userId, fullName, position,preferences, organizationId,email,roles} = req.body;
+    return userProfileService.sync(userId,fullName,position,preferences,organizationId,email,roles);
   } catch (error) {
     next(error);
   }

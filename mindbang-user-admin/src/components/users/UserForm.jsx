@@ -72,8 +72,8 @@ const UserForm = ({ initialData = {}, onSubmit }) => {
                 console.log('Full response:', result);
             }
 
-            // Si la contraseña se llena, cambiarla
-            if (form.password) {
+            // Si la contraseña se llena, y no es new user, cambiarla
+            if (form._id && form.password) {
                 const passwordChangeResult = await changePassword(form.password, form.newPassword);
                 if (!passwordChangeResult.success) {
                     setErrors([passwordChangeResult.message || 'Error al cambiar la contraseña']);
@@ -85,6 +85,7 @@ const UserForm = ({ initialData = {}, onSubmit }) => {
 
         } catch (err) {
             setErrors([err.message || 'Error al guardar']);
+            console.error("Error en UserForm:", err);
         }
     };
 

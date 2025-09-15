@@ -17,7 +17,7 @@ const userProfileSchema = new Schema({
     type: String,
     trim: true
   },
-  OrganizationId: {
+  organizationId: {
     type: String,    
     required: false,
     desc: 'ID de la organización a la que pertenece el usuario desde servicio de autenticación'
